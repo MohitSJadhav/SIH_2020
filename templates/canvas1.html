@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas2</title>
+    <link rel="shortcut icon" href="#" />
+</head>
+<style>
+    body {
+        margin: 0;
+    }
+
+    #canvas_box {
+        width: 95vw;
+        height: 90vh;
+        position: relative;
+    }
+
+    canvas {
+
+        position: absolute;
+        top: 60px;
+        margin: 0 2vw 2% 2vw;
+        background-color: #FFCCCC;
+        border: 2px inset brown;
+    }
+
+
+    .btns {
+        width: 50%;
+        display: flex;
+        justify-content: space-between;
+        position: absolute;
+        top: 10px;
+        right: 0%;
+    }
+
+    .buttons>button {
+
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 800;
+        padding: 0.5rem 1rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 3px;
+        background-color: #00bcd4;
+        font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    .count-btn {
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 800;
+        padding: 0.5rem 1rem;
+        letter-spacing: 1px;
+        border: none;
+        border-radius: 3px;
+        background-color: #e97171;
+        outline: none;
+        box-shadow: 3px 5px 5px #888888;
+        font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        transform: scale(1);
+        animation: float-counter 0.6s infinite ease-out 2s;
+
+    }
+
+
+    #my-select {
+        color: white;
+        display: block;
+        position: absolute;
+        top: 10px;
+        left: 2%;
+        font-size: 0.8rem;
+        font-weight: 800;
+        padding: 0.5rem 1rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 3px;
+        background-color: #3700B3;
+        font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    @media (max-width: 540px) {
+        .btns {
+            width: 55%;
+        }
+
+        #canvas_box {
+            width: 94.5vw;
+            height: 88vh;
+
+        }
+    }
+
+    @media (max-width: 480px) {
+        .btns {
+            width: 60%;
+        }
+
+        .buttons>button,
+        .count-btn,
+        #my-select {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.5rem 0.5rem;
+
+        }
+
+    }
+
+    @media (max-width: 380px) {
+        .btns {
+            width: 62%;
+        }
+
+    }
+
+    @media (max-width: 360px) {
+        .btns {
+            width: 65%;
+        }
+
+    }
+
+    @keyframes float-counter {
+        0% {
+            transform: scale(1);
+            box-shadow: 3px 5px 5px #888888;
+        }
+
+        80% {
+            transform: scale(1.1);
+            box-shadow: 3px 5px 10px #888888;
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 3px 5px 5px #888888;
+        }
+    }
+</style>
+<script type="text/javascript">
+    var canvas, ctx, flag = false,
+        prevX = 0,
+        currX = 0,
+        prevY = 0,
+        currY = 0,
+        dot_flag = false,
+        drawn = false;
+
+    var timerCount = 10;
+    var x = "black",
+        y = 10;
+    var aulink;
+    var stop = false;
+
+    var userLang;
+    var numb;
+    var attempted = false;
+    var content;
+    var tryAttempts = 0;
+
+
+    function init() {
+
+        document.getElementById("count").innerHTML = timerCount;
+
+        //resizing canvas using width of the view port on each load()
+        body = document.getElementById("canvas_box")
+        w = window.getComputedStyle(body, null).getPropertyValue("width");
+        h = window.getComputedStyle(body, null).getPropertyValue("height");
+        document.getElementById("canvas").setAttribute("width", w);
+        document.getElementById("canvas").setAttribute("height", h);
+
+        canvas = document.getElementById("canvas");
+        ctx = canvas.getContext("2d");
+
+        canvas.addEventListener("mousemove", function (e) {
+            findxy('move', e)
+        }, false);
+        canvas.addEventListener("mousedown", function (e) {
+            findxy('down', e)
+        }, false);
+        canvas.addEventListener("mouseup", function (e) {
+            findxy('up', e)
+        }, false);
+        canvas.addEventListener("mouseout", function (e) {
+            findxy('out', e)
+        }, false);
+
+
+    }
+    function draw() {
+
+        if (!drawn) {
+
+
+            var container = document.getElementById("container");
+            content = container.innerHTML;
+
+            attempted = true;
+
+            var timer = setInterval(() => {
+
+                var c = document.getElementById("count").innerHTML;
+
+                if (c == 0) {
+
+                    clearInterval(timer)
+                } else {
+                    document.getElementById("count").innerHTML = c - 1;
+                }
+            }, 1000)
+
+            setTimeout(() => {
+
+                sendCanvasAsImage();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                document.getElementById("canvasimg").style.display = "none";
+
+            }, timerCount * 1000)
+
+        }
+        drawn = true;
+
+        ctx.beginPath();
+        ctx.moveTo(prevX, prevY);
+        ctx.lineTo(currX, currY);
+        ctx.strokeStyle = x;
+        ctx.lineWidth = y;
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    function erase() {
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById("canvasimg").style.display = "none";
+    }
+
+    function save() {
+        document.getElementById("canvasimg").style.border = "2px solid";
+        var dataURL = canvas.toDataURL();
+        document.getElementById("canvasimg").src = dataURL;
+        document.getElementById("canvasimg").style.display = "inline";
+    }
+
+    function findxy(res, e) {
+        if (res == 'down') {
+            prevX = currX;
+            prevY = currY;
+            currX = e.clientX - canvas.offsetLeft;
+            currY = e.clientY - canvas.offsetTop;
+
+            flag = true;
+            dot_flag = true;
+            if (dot_flag) {
+                ctx.beginPath();
+                ctx.fillStyle = x;
+                ctx.fillRect(currX, currY, 2, 2);
+                ctx.closePath();
+                dot_flag = false;
+            }
+        }
+        if (res == 'up' || res == "out") {
+            flag = false;
+        }
+        if (res == 'move') {
+            if (flag) {
+                prevX = currX;
+                prevY = currY;
+                currX = e.clientX - canvas.offsetLeft;
+                currY = e.clientY - canvas.offsetTop;
+                draw();
+            }
+        }
+    }
+    function callaudio(aud,numb) {
+
+        var st = "http://localhost:9600/static/audios/"+aud+"/"+numb+".mp3"
+        var sound = new Audio();
+        sound.src = st;
+        sound.play();
+    }
+     //    alert(d);
+      /*  console.log(d);
+        if (d == 1) {
+
+            var a = Math.floor((Math.random() * 30) + 1);
+            //a=1;
+            //console.log(a);
+            var sound = new Audio();
+            switch (a) {
+                case 1: sound.src = 'http://localhost:9600/static/english/enshape-circle-1.mp3'
+                    break;
+                case 2: sound.src = 'http://localhost:9600/static/english/enshape-circle-2.mp3'
+                    break;
+                case 3: sound.src = 'http://localhost:9600/static/english/enshape-circle-3.mp3'
+                    break;
+                case 4: sound.src = 'http://localhost:9600/static/english/enshape-circle-4.mp3'
+                    break;
+                case 5: sound.src = 'http://localhost:9600/static/english/enshape-circle-5.mp3'
+                    break;
+                case 6: sound.src = 'http://localhost:9600/static/english/enshape-circle-6.mp3'
+                    break;
+                case 7: sound.src = 'http://localhost:9600/static/english/enshape-circle-7.mp3'
+                    break;
+                case 8: sound.src = 'http://localhost:9600/static/english/enshape-circle-8.mp3'
+                    break;
+                case 9: sound.src = 'http://localhost:9600/static/english/enshape-circle-9.mp3'
+                    break;
+                case 10: sound.src = 'http://localhost:9600/static/english/enshape-circle-10.mp3'
+                    break;
+                case 11: sound.src = 'http://localhost:9600/static/english/enshape-triangle-1.mp3'
+                    break;
+                case 12: sound.src = 'http://localhost:9600/static/english/enshape-triangle-2.mp3'
+                    break;
+                case 13: sound.src = 'http://localhost:9600/static/english/enshape-triangle-3.mp3'
+                    break;
+                case 14: sound.src = 'http://localhost:9600/static/english/enshape-triangle-4.mp3'
+                    break;
+                case 15: sound.src = 'http://localhost:9600/static/english/enshape-triangle-5.mp3'
+                    break;
+                case 16: sound.src = 'http://localhost:9600/static/english/enshape-triangle-6.mp3'
+                    break;
+                case 17: sound.src = 'http://localhost:9600/static/english/enshape-triangle-7.mp3'
+                    break;
+                case 18: sound.src = 'http://localhost:9600/static/english/enshape-triangle-8.mp3'
+                    break;
+                case 19: sound.src = 'http://localhost:9600/static/english/enshape-triangle-9.mp3'
+                    break;
+                case 20: sound.src = 'http://localhost:9600/static/english/enshape-triangle-10.mp3'
+                    break;
+                case 21: sound.src = 'http://localhost:9600/static/english/enshape-rectangle-1.mp3'
+                    break;
+                case 22: sound.src = 'http://localhost:9600/static/english/enshape-rectangle-2.mp3'
+                    break;
+                case 23: sound.src = 'http://localhost:9600/static/english/enshape-rectangle-3.mp3'
+                    break;
+                case 24: sound.src = 'http://localhost:9600/static/english/enshape-rectangle-4.mp3'
+                    break;
+                case 25: sound.src = 'http://localhost:9600/static/english/enshape-rectangle-5.mp3'
+                    break;
+                case 26: sound.src = 'http://localhost:9600/static/english/enshape-rectangle-6.mp3'
+                    break;
+                case 27: sound.src = 'http://localhost:9600/static/english/enshape-rectangle-7.mp3'
+                    break;
+                case 28: sound.src = 'http://localhost:9600/static/english/enshape-rectangle-8.mp3'
+                    break;
+                case 29: sound.src = 'http://localhost:9600/static/english/enshape-rectangle-9.mp3'
+                    break;
+                case 30: sound.src = 'http://localhost:9600/static/english/enshape-rectangle-10.mp3'
+                    break;
+
+
+
+            }
+            sound.play();
+            aulink = sound.src;
+            console.log(aulink);
+            document.getElementById('canvas').scrollIntoView();
+        }
+        else if (d == 2) {
+
+            var a = Math.floor((Math.random() * 30) + 1);
+            //a=1;
+            //console.log(a);
+            var sound = new Audio();
+            switch (a) {
+
+                case 1: sound.src = 'http://localhost:9600/static/hindi/hinshape-circle-1.mp3'
+                    break;
+                case 2: sound.src = 'http://localhost:9600/static/hindi/hinshape-circle-2.mp3'
+                    break;
+                case 3: sound.src = 'http://localhost:9600/static/hindi/hinshape-circle-3.mp3'
+                    break;
+                case 4: sound.src = 'http://localhost:9600/static/hindi/hinshape-circle-4.mp3'
+                    break;
+                case 5: sound.src = 'http://localhost:9600/static/hindi/hinshape-circle-5.mp3'
+                    break;
+                case 6: sound.src = 'http://localhost:9600/static/hindi/hinshape-circle-6.mp3'
+                    break;
+                case 7: sound.src = 'http://localhost:9600/static/hindi/hinshape-circle-7.mp3'
+                    break;
+                case 8: sound.src = 'http://localhost:9600/static/hindi/hinshape-circle-8.mp3'
+                    break;
+                case 9: sound.src = 'http://localhost:9600/static/hindi/hinshape-circle-9.mp3'
+                    break;
+                case 10: sound.src = 'http://localhost:9600/static/hindi/hinshape-circle-10.mp3'
+                    break;
+                case 11: sound.src = 'http://localhost:9600/static/hindi/hinshapes-triangle-1.mp3'
+                    break;
+                case 12: sound.src = 'http://localhost:9600/static/hindi/hinshapes-triangle-2.mp3'
+                    break;
+                case 13: sound.src = 'http://localhost:9600/static/hindi/hinshapes-triangle-3.mp3'
+                    break;
+                case 14: sound.src = 'http://localhost:9600/static/hindi/hinshapes-triangle-4.mp3'
+                    break;
+                case 15: sound.src = 'http://localhost:9600/static/hindi/hinshapes-triangle-5.mp3'
+                    break;
+                case 16: sound.src = 'http://localhost:9600/static/hindi/hinshapes-triangle-6.mp3'
+                    break;
+                case 17: sound.src = 'http://localhost:9600/static/hindi/hinshapes-triangle-7.mp3'
+                    break;
+                case 18: sound.src = 'http://localhost:9600/static/hindi/hinshapes-triangle-8.mp3'
+                    break;
+                case 19: sound.src = 'http://localhost:9600/static/hindi/hinshapes-triangle-9.mp3'
+                    break;
+                case 20: sound.src = 'http://localhost:9600/static/hindi/hinshapes-triangle-10.mp3'
+                    break;
+                case 21: sound.src = 'http://localhost:9600/static/hindi/hinshapes-rectangle-1.mp3'
+                    break;
+                case 22: sound.src = 'http://localhost:9600/static/hindi/hinshapes-rectangle-2.mp3'
+                    break;
+                case 23: sound.src = 'http://localhost:9600/static/hindi/hinshapes-rectangle-3.mp3'
+                    break;
+                case 24: sound.src = 'http://localhost:9600/static/hindi/hinshapes-rectangle-4.mp3'
+                    break;
+                case 25: sound.src = 'http://localhost:9600/static/hindi/hinshapes-rectangle-5.mp3'
+                    break;
+                case 26: sound.src = 'http://localhost:9600/static/hindi/hinshapes-rectangle-6.mp3'
+                    break;
+                case 27: sound.src = 'http://localhost:9600/static/hindi/hinshapes-rectangle-7.mp3'
+                    break;
+                case 28: sound.src = 'http://localhost:9600/static/hindi/hinshapes-rectangle-8.mp3'
+                    break;
+                case 29: sound.src = 'http://localhost:9600/static/hindi/hinshapes-rectangle-9.mp3'
+                    break;
+                case 30: sound.src = 'http://localhost:9600/static/hindi/hinshapes-rectangle-10.mp3'
+                    break;
+
+
+
+            }
+            sound.play();
+            aulink = sound.src;
+            console.log(aulink);
+            document.getElementById('canvas').scrollIntoView();
+        }
+        else if (d == 3) {
+            var a = Math.floor((Math.random() * 30) + 1);
+            //a=1;
+
+            //console.log(a);
+            var sound = new Audio();
+            switch (a) {
+                case 1: sound.src = 'http://localhost:9600/static/marathi/marshapes-circle-1.mp3'
+                    break;
+                case 1: sound.src = 'http://localhost:9600/static/marathi/marshapes-circle-1.mp3'
+                    break;
+                case 2: sound.src = 'http://localhost:9600/static/marathi/marshapes-circle-2.mp3'
+                    break;
+                case 3: sound.src = 'http://localhost:9600/static/marathi/marshapes-circle-3.mp3'
+                    break;
+                case 4: sound.src = 'http://localhost:9600/static/marathi/marshapes-circle-4.mp3'
+                    break;
+                case 5: sound.src = 'http://localhost:9600/static/marathi/marshapes-circle-5.mp3'
+                    break;
+                case 6: sound.src = 'http://localhost:9600/static/marathi/marshapes-circle-6.mp3'
+                    break;
+                case 7: sound.src = 'http://localhost:9600/static/marathi/marshapes-circle-7.mp3'
+                    break;
+                case 8: sound.src = 'http://localhost:9600/static/marathi/marshapes-circle-8.mp3'
+                    break;
+                case 9: sound.src = 'http://localhost:9600/static/marathi/marshapes-circle-9.mp3'
+                    break;
+                case 10: sound.src = 'http://localhost:9600/static/marathi/marshapes-circle-10.mp3'
+                    break;
+                case 11: sound.src = 'http://localhost:9600/static/marathi/marshapes-triangle-1.mp3'
+                    break;
+                case 12: sound.src = 'http://localhost:9600/static/marathi/marshapes-triangle-2.mp3'
+                    break;
+                case 13: sound.src = 'http://localhost:9600/static/marathi/marshapes-triangle-3.mp3'
+                    break;
+                case 14: sound.src = 'http://localhost:9600/static/marathi/marshapes-triangle-4.mp3'
+                    break;
+                case 15: sound.src = 'http://localhost:9600/static/marathi/marshapes-triangle-5.mp3'
+                    break;
+                case 16: sound.src = 'http://localhost:9600/static/marathi/marshapes-triangle-6.mp3'
+                    break;
+                case 17: sound.src = 'http://localhost:9600/static/marathi/marshapes-triangle-7.mp3'
+                    break;
+                case 18: sound.src = 'http://localhost:9600/static/marathi/marshapes-triangle-8.mp3'
+                    break;
+                case 19: sound.src = 'http://localhost:9600/static/marathi/marshapes-triangle-9.mp3'
+                    break;
+                case 20: sound.src = 'http://localhost:9600/static/marathi/marshapes-triangle-10.mp3'
+                    break;
+                case 21: sound.src = 'http://localhost:9600/static/marathi/marshapes-rectangle-1.mp3'
+                    break;
+                case 22: sound.src = 'http://localhost:9600/static/marathi/marshapes-rectangle-2.mp3'
+                    break;
+                case 23: sound.src = 'http://localhost:9600/static/marathi/marshapes-rectangle-3.mp3'
+                    break;
+                case 24: sound.src = 'http://localhost:9600/static/marathi/marshapes-rectangle-4.mp3'
+                    break;
+                case 25: sound.src = 'http://localhost:9600/static/marathi/marshapes-rectangle-5.mp3'
+                    break;
+                case 26: sound.src = 'http://localhost:9600/static/marathi/marshapes-rectangle-6.mp3'
+                    break;
+                case 27: sound.src = 'http://localhost:9600/static/marathi/marshapes-rectangle-7.mp3'
+                    break;
+                case 28: sound.src = 'http://localhost:9600/static/marathi/marshapes-rectangle-8.mp3'
+                    break;
+                case 29: sound.src = 'http://localhost:9600/static/marathi/marshapes-rectangle-9.mp3'
+                    break;
+                case 30: sound.src = 'http://localhost:9600/static/marathi/marshapes-rectangle-10.mp3'
+                    break;
+
+
+
+            }
+            sound.play();
+            aulink = sound.src;
+            console.log(aulink);
+            document.getElementById('canvas').scrollIntoView();
+
+        }
+    }*/
+    function call_funct(){
+          $.ajax({
+              type: "GET",
+              url: "/redir"
+          }).done(function (response) {
+                if(response == "True"){
+                    window.open('/form.html');
+                    window.open('/result.html',"_self");
+                  }
+          });
+    }
+
+    function refresh(condition) {
+
+        tryAttempts += 1;
+        console.log("Attempted" + tryAttempts + "time(s)");
+        if (tryAttempts === 3 && condition === "False") {
+
+            call_funct();
+
+        }
+        else {
+
+            document.getElementById("container").innerHTML = content;
+            drawn = false;
+            init();
+            numb = Math.floor(Math.random() * 9);
+            if(numb===0 || numb===1 || numb===2){
+                      $.ajax({
+                          type: "POST",
+                          url: "/audio",
+                          data: {
+                              langg: "circle"
+                          }
+                      }).done(function (response) {
+                            if (response == "True"){
+                                console.log("saved as circle");
+                            //    alert("saved as circle");
+                          }
+                          else {
+                            console.log("not saved as circle");
+                          //  alert("not saved as circle");
+                          }
+                      });
+            }else if(numb===3 || numb===4 || numb===5){
+                      $.ajax({
+                          type: "POST",
+                          url: "/audio",
+                          data: {
+                              langg: "rectangle"
+                          }
+                      }).done(function (response) {
+                            if (response == "True"){
+                                console.log("saved as rectangle");
+                            //    alert("saved as rec");
+
+                          }
+                          else {
+                            console.log("not saved as rectangle");
+                          //  alert("not saved as rec");
+                          }
+                      });
+              }else {
+                        $.ajax({
+                            type: "POST",
+                            url: "/audio",
+                            data: {
+                                langg: "triangle"
+                            }
+                        }).done(function (response) {
+                              if (response == "True"){
+                                  console.log("saved as triangle");
+                                //  alert("saved as tri");
+
+                            }
+                            else {
+                              console.log("not saved as triangle");
+                            //  alert("not saved as tri");
+                            }
+                        });
+              }
+            callaudio(userLang,numb);
+
+        }
+      }
+
+</script>
+
+<body onload="init()" id="container">
+    <div id="canvas_box">
+        <!--  -->
+        <button id='my-select' >Speak your language</button>
+        <div class="btns">
+            <button class="count-btn" title="10 second timer"> <span id="count"></span> s</button>
+            <div class="buttons">
+              <!--  <button type="button" onclick="callaudio()" name="Play Audio" title="Play an audio instruction">Play
+                    Audio</button-->
+              <!--  <button type="button" onclick="sendCanvasAsImage()" name="check captcha"
+                    title="Check your Captcha">Check</button>-->
+            </div>
+
+
+        </div>
+        <canvas id="canvas"></canvas>
+        <img id="canvasimg" style="position:absolute;top:10%;left:52%;" style="display:none;">
+
+    </div>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script>
+        function success() {
+            sound = new Audio();
+            sound.src = 'http://localhost:9600/static/authentication_sucessfull.wav';
+            sound.play();
+        }
+        function failed() {
+            sound = new Audio();
+            sound.src = 'http://localhost:9600/static/authentication_failed.wav';
+            sound.play();
+        }
+        function audio_scene(){
+          var sound = new Audio();
+          sound.src ='Desktop/welcome.wav';
+          sound.play();
+        }
+        function sendCanvasAsImage() {
+            //stop = true;
+            document.getElementById("count").innerHTML = 0;
+            var canvas = document.getElementById("canvas");
+            var dataURL = canvas.toDataURL();
+            //var link = aulink
+            $.ajax({
+                type: "POST",
+                url: "/classify",
+                data: {
+                    imageBase64: dataURL,
+                  //  teamData: link
+                }
+            }).done(function (response) {
+                if (response == "True"){
+                  window.open('/dashboard.html');
+                  window.open('/result.html',"_self");
+              }
+              else {
+                refresh(response);
+              }
+            });
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById("canvasimg").style.display = "none";
+
+        }
+
+        /////////////////////////////////////VOICE RECOGNITION BLOCK////////////////////////////////////////
+
+        var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
+        var SpeechGrammarList = SpeechGrammarList || webkitSpeechGrammarList;
+
+        var grammar = '#JSGF V1.0;'
+
+        var recognition = new SpeechRecognition();
+        var speechRecognitionList = new SpeechGrammarList();
+        speechRecognitionList.addFromString(grammar, 1);
+        recognition.grammars = speechRecognitionList;
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+
+        recognition.onresult = function (event) {
+            var last = event.results.length - 1;
+            var command = event.results[last][0].transcript;
+
+            //alert(command.toLowerCase());
+            numb = Math.floor(Math.random() * 9);
+            userLang = command.toLowerCase();
+
+            console.log(numb);
+            if(numb===0 || numb===1 || numb===2){
+                      $.ajax({
+                          type: "POST",
+                          url: "/audio",
+                          data: {
+                              langg: "circle"
+                          }
+                      }).done(function (response) {
+                            if (response == "True"){
+                                console.log("saved as circle");
+                            //    alert("saved as circle");
+                          }
+                          else {
+                            console.log("not saved as circle");
+                          //  alert("not saved as circle");
+                          }
+                      });
+            }else if(numb===3 || numb===4 || numb===5){
+                      $.ajax({
+                          type: "POST",
+                          url: "/audio",
+                          data: {
+                              langg: "rectangle"
+                          }
+                      }).done(function (response) {
+                            if (response == "True"){
+                                console.log("saved as rectangle");
+                            //    alert("saved as rec");
+
+                          }
+                          else {
+                            console.log("not saved as rectangle");
+                          //  alert("not saved as rec");
+                          }
+                      });
+              }else {
+                        $.ajax({
+                            type: "POST",
+                            url: "/audio",
+                            data: {
+                                langg: "triangle"
+                            }
+                        }).done(function (response) {
+                              if (response == "True"){
+                                  console.log("saved as triangle");
+                                //  alert("saved as tri");
+
+                            }
+                            else {
+                              console.log("not saved as triangle");
+                            //  alert("not saved as tri");
+                            }
+                        });
+              }
+              callaudio(userLang,numb);
+        };
+        recognition.onspeechend = function () {
+            recognition.stop();
+        };
+
+        recognition.onerror = function (event) {
+            alert("Try again");
+        }
+
+        document.querySelector('#my-select').addEventListener('click', function () {
+
+            console.log(userLang);
+
+            if (!attempted) {
+                //alert(attempted);
+                recognition.start();
+            }
+        });
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+    </script>
+
+</body>
+
+</html>

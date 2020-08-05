@@ -1,0 +1,17 @@
+Flask==1.1.1
+gunicorn==20.0.4
+Jinja2==2.10.3
+numpy==1.18.1
+Pillow
+opencv-python
+matplotlib
+keras
+theano
+libSM
+
+
+
+
+
+
+
