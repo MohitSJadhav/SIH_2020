@@ -61,5 +61,5 @@ Slide 5: Keynotes:
     • Increased security, because of time constraint given to draw the instructed shape.
 
 To execute this project on your system:
-1.execute requirements.txt first.
-2.exectue shapefinal.py.
+1.execute requirements.txt.
+2.execute shapefinal.py.
