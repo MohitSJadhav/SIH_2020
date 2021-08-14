@@ -23,7 +23,7 @@ user reaches the maximum attempt limit else the authentication process fails and
 user will be redirected to previous page.
 
 To execute project
-1.Download zip \n
-2.Extact zip \n
-3.Install dependencies from requirements.txt
-4.Execute shapefinal.py
+1.Download zip. 
+2.Extact zip. 
+3.Install dependencies from requirements.txt.
+4.Execute shapefinal.py.
